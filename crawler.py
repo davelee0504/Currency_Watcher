@@ -1,58 +1,50 @@
  #-*- coding: utf-8 -*-
-
-from bs4 import BeautifulSoup
-from collections import OrderedDict
 import sys
 import requests
-import urllib
-import time
+from collections import OrderedDict
 from telegram import * # telegram is identical to file name telegram.py
 from python_mysql import *
+from bs4 import BeautifulSoup
 
-# Currency list from bank of taiwan
-crawl_page = "http://rate.bot.com.tw/Pages/Static/UIP003.zh-TW.htm"
-output = requests.get(crawl_page)
-output = output.text.encode("ISO-8859-1")#weird coding...
+request = requests.session()
+warning_page_source = request.get('https://fctc.bot.com.tw/Purchase/WarningPage#')
 
+soup = BeautifulSoup(warning_page_source.text, 'html.parser')
+token =  soup.select('input')[0].get('value')
 
-soup = BeautifulSoup(output, 'html.parser')
-update_time = u"牌價最新掛牌時間\n" + soup.find(style = "width:326px;text-align:left;vertical-align:top;color:#0000FF;font-size:11pt;font-weight:bold;").text.strip()[10:]
-#print(update_time)
+payload = {
+    '__RequestVerificationToken':token
+}
+currency_page_source = request.post('https://fctc.bot.com.tw/Purchase/SelectCurrencyBank', data = payload)
+soup = BeautifulSoup(currency_page_source.text, 'html.parser')
 
-#現金cash，即期spot，買入buying，賣出selling，遠期forward
 currency_dict = OrderedDict()
-currencies = soup.find_all("tr", class_ = ["color0", "color1"])
-for currency in currencies:
-	currency_info = currency.find_all('td')
-	currency_name = currency_info[0].text.strip()
-	cash_buying_rate = currency_info[2].text.strip()
+update_time=soup.select('h6')[0].text.encode('utf8')
+#print update_time
 
-	if "USD" in currency_name:
-		discount_buying_rate = float(cash_buying_rate) - 0.02
-	elif "ZAR" in currency_name:
-		continue
-	elif "VND" in currency_name or "IDR" in currency_name:
-		discount_buying_rate = float(cash_buying_rate)
-	else:
-		discount_buying_rate = float(cash_buying_rate) - (float(cash_buying_rate)*0.001)
+rows = soup.find_all("div", {"class": "m_1"})
+for index, tr in enumerate(rows):
+        cols=tr.find_all('p')
+        currency_name = cols[0].text.replace(u'\xa0','').encode('utf8').strip()
+        currency_rate = cols[1].text.encode('utf8').strip()
+        #print '%s %s' % (currency_name, currency_rate)
+        if currency_name not in currency_dict:
+		currency_dict[currency_name] = currency_rate
 
-	# stored both normal rate and discount rate	
-	#currency_dict[currency_name] = str(cash_buying_rate) + '/' + str(discount_buying_rate)
 
-	# stored discount rate only	
-	currency_dict[currency_name] = str(discount_buying_rate)
+#print key and value in dictionary
+#for key, value in currency_dict.iteritems():
+#       print '{0:<15}\t{1: >10}'.format(key, value)
+
+#sys.exit()
 
 send_msg = update_time + '\n\n'
-
 for currency, rate in currency_dict.iteritems():
-	send_msg += (currency + '\t' + rate + "\n")
-	
+        send_msg += ('{:<20}'.format(currency) + '\t\t{:>10}'.format(rate) + '\n')
+        #print ("%s\t%s")%(key, value)
 #print send_msg
+
 telegram_client=Telegram()
 mysql_client = PythonMysql()
 chat_ids = mysql_client.get_subscribe_users()
 telegram_client.send_msg(send_msg, chat_ids)
-
-
-
-
