@@ -7,4 +7,5 @@ Telegram needs to be install in your smart phone (iOS or Android).
 
 
 ##Screenshot
-[![Currency Watcher](https://cldup.com/DlKBNO7r6K.PNG)]
+![CurrencyWatcher](https://cldup.com/DlKBNO7r6K.PNG)
+
