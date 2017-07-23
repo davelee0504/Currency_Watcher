@@ -14,7 +14,7 @@ class Telegram:
 	def send_msg(self, msg, receivers):
 		delivery_message = msg		
 		for receiver in receivers:
-			param_list = {'chat_id' : receiver, 'text' : delivery_message}
+			param_list = {'chat_id' : receiver, 'text' : delivery_message, 'parse_mode': 'Markdown'}
 			request_page = "https://api.telegram.org/bot%s/%s?%s"%(self.token, self.method, param_list)
 			#print request_page
 			time.sleep(1)

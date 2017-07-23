@@ -68,7 +68,7 @@ class Crawler(object):
             # buy_price_dict has full list of currency, so no need to check
             if not c.sell_price_dict.has_key(currency):
                 c.sell_price_dict[currency] = '-'    
-            formatted_name = '{0}({1})'.format((c.currency_name_dict[currency]).encode('utf-8'), currency)
+            formatted_name = '*{0}({1})*'.format((c.currency_name_dict[currency]).encode('utf-8'), currency)
             send_msg += '{0:25}{1:>6} / {2:>6}\n'.format(formatted_name, c.buy_price_dict[currency], c.sell_price_dict[currency]) 
            
         telegram_client=Telegram()
