@@ -38,11 +38,11 @@ class Crawler(object):
 
     def crawl_sell_price(self):
         request = requests.session()
-        warning_page_source = request.get('https://fctc.bot.com.tw/Purchase/WarningPage#')
-
+        warning_page_source = request.post('https://fctc.bot.com.tw/Purchase/WarningPage#')
+        
         soup = BeautifulSoup(warning_page_source.text, 'html.parser')
         token =  soup.select('input')[0].get('value')
-
+        
         payload = {
             '__RequestVerificationToken':token
         }
